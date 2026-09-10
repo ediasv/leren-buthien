@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 
+#include "CaminhoRecursos.h"
 #include "Entidades/Entidade.h"
 #include "Entidades/Personagens/Inimigo.h"
 #include "Entidades/Personagens/Jogador.h"
@@ -101,13 +102,13 @@ void Fase::criarMapa(const std::string path) {
     exit(EXIT_FAILURE);
   }
 
-  std::ifstream arquivoMapa;
-  std::string filePath = ROOT;
-  filePath += path;
-
-  arquivoMapa.open(filePath);
+  const std::filesystem::path caminhoCompleto =
+      Recursos::resolverCaminhoRecurso(path);
+  std::ifstream arquivoMapa(caminhoCompleto);
 
   if (!arquivoMapa.is_open()) {
+    std::cerr << "erro: não foi possível abrir o mapa " << caminhoCompleto
+              << '\n';
     exit(EXIT_FAILURE);
   }
 

@@ -1,0 +1,135 @@
+name: Linux AppImage
+
+on:
+  push:
+    branches:
+      - appimage
+    tags:
+      - "v*"
+  pull_request:
+    paths:
+      - "CMakeLists.txt"
+      - "src/**"
+      - "include/**"
+      - "tests/**"
+      - "assets/**"
+      - "packaging/appimage/**"
+      - ".github/workflows/appimage.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  appimage:
+    name: Build and validate (Ubuntu 22.04 x86_64)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install build and validation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes \
+            appstream \
+            binutils \
+            build-essential \
+            cmake \
+            curl \
+            desktop-file-utils \
+            file \
+            libgtest-dev \
+            libsfml-dev \
+            ninja-build \
+            xauth \
+            xvfb
+
+      - name: Build and run tests
+        run: |
+          cmake -S . -B build/tests -G Ninja \
+            -DBUILD_TESTING=ON \
+            -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build/tests --parallel
+          ctest --test-dir build/tests --output-on-failure
+
+      - name: Validate desktop metadata
+        run: |
+          desktop-file-validate \
+            packaging/appimage/io.github.ediasv.YmirHelga.desktop
+          appstreamcli validate \
+            packaging/appimage/io.github.ediasv.YmirHelga.metainfo.xml
+
+      - name: Download and verify official AppImage tools
+        run: |
+          mkdir -p build/appimage-tools
+          curl --fail --location --proto '=https' --tlsv1.2 \
+            --output build/appimage-tools/appimagetool-x86_64.AppImage \
+            https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage
+          echo 'ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0  build/appimage-tools/appimagetool-x86_64.AppImage' \
+            | sha256sum --check --strict
+          curl --fail --location --proto '=https' --tlsv1.2 \
+            --output build/appimage-tools/runtime-x86_64 \
+            https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64
+          echo '2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d  build/appimage-tools/runtime-x86_64' \
+            | sha256sum --check --strict
+          chmod +x build/appimage-tools/appimagetool-x86_64.AppImage
+
+      - name: Build AppImage
+        env:
+          APPIMAGETOOL: ${{ github.workspace }}/build/appimage-tools/appimagetool-x86_64.AppImage
+          APPIMAGE_RUNTIME: ${{ github.workspace }}/build/appimage-tools/runtime-x86_64
+        run: packaging/appimage/build-appimage.sh
+
+      - name: Remove host SFML runtime libraries
+        run: |
+          sudo apt-get remove --yes \
+            libsfml-dev \
+            libsfml-graphics2.5 \
+            libsfml-system2.5 \
+            libsfml-window2.5
+          if ldconfig -p | grep -Eq \
+            'libsfml-(graphics|system|window)\.so'; then
+            echo 'Host SFML runtime libraries are still installed' >&2
+            exit 1
+          fi
+
+      - name: Smoke test packaged game from an unrelated directory
+        shell: bash
+        run: |
+          set -uo pipefail
+          smoke_directory=/tmp/ymir-helga-smoke
+          smoke_log=${smoke_directory}/game.log
+          artifact=${GITHUB_WORKSPACE}/build/appimage/output/Ymir_Helga-x86_64.AppImage
+          rm -rf "${smoke_directory}"
+          mkdir -p "${smoke_directory}"
+          cd "${smoke_directory}"
+
+          status=0
+          timeout --signal=TERM 10s xvfb-run -a \
+            -s '-screen 0 1280x720x24' \
+            env APPIMAGE_EXTRACT_AND_RUN=1 "${artifact}" \
+            >"${smoke_log}" 2>&1 || status=$?
+          cat "${smoke_log}"
+
+          if [[ ${status} -ne 124 ]]; then
+            echo "Game did not remain running until timeout (status ${status})" >&2
+            exit 1
+          fi
+          if grep -Eiq \
+            'erro:|failed to load|error while loading shared libraries|segmentation fault' \
+            "${smoke_log}"; then
+            echo 'Smoke test found a launch or resource error' >&2
+            exit 1
+          fi
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ymir-Helga-Linux-x86_64
+          if-no-files-found: error
+          path: |
+            build/appimage/output/Ymir_Helga-x86_64.AppImage
+            build/appimage/output/Ymir_Helga-x86_64.AppImage.sha256
