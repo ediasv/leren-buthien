@@ -1,6 +1,3 @@
-# Variáveis de dependências
-set(SFML_LIBS sfml-graphics sfml-window sfml-system sfml-audio)
-
 # ---------------------------------------------------------
 # Biblioteca Jogo
 
@@ -8,6 +5,7 @@ add_library(jogo
   # Raiz do projeto
   Jogo.cpp
   Ente.cpp
+  CaminhoRecursos.cpp
   State.cpp
   Mediator.cpp
   ObserverFase.cpp
@@ -68,19 +66,31 @@ add_library(jogo
   Listas/ListaEntidade.cpp
 )
 
-target_link_libraries(jogo
+target_compile_definitions(jogo
   PRIVATE
-  ${SFML_LIBS}
+    YMIR_HELGA_INSTALL_ASSET_DIR="${CMAKE_INSTALL_FULL_DATADIR}/ymir-helga/assets"
+    YMIR_HELGA_DEVELOPMENT_ASSET_DIR="${CMAKE_SOURCE_DIR}/assets"
+)
+
+target_link_libraries(jogo
+  PUBLIC
+    sfml-graphics
+    sfml-window
+    sfml-system
 )
 
 # ---------------------------------------------------------
 # Executável principal
 
-add_executable(main
+add_executable(ymir-helga
   Main.cpp
 )
 
-target_link_libraries(main
+target_link_libraries(ymir-helga
   PRIVATE
-  jogo
+    jogo
+)
+
+install(TARGETS ymir-helga
+  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
 )

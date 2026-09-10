@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Ymir & Helga
+Comment=Two-player 2D platform game
+Exec=ymir-helga
+Icon=io.github.ediasv.YmirHelga
+Terminal=false
+Categories=Game;ArcadeGame;

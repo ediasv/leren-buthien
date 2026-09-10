@@ -5,6 +5,7 @@
 #include <SFML/Window/WindowStyle.hpp>
 #include <iostream>
 
+#include "CaminhoRecursos.h"
 #include "Ente.h"
 
 namespace Gerenciadores {
@@ -61,11 +62,12 @@ void GerenciadorGrafico::fecharJanela() {
 }
 
 void GerenciadorGrafico::carregarFonte(const std::string &path) {
-  std::string filePath = ROOT;
-  filePath += path;
-  std::cerr << filePath << '\n';
-  if (!superPixel->loadFromFile(filePath)) {
-    std::cerr << "Erro em loadFromFile\n";
+  const std::filesystem::path caminhoCompleto =
+      Recursos::resolverCaminhoRecurso(path);
+
+  if (!superPixel->loadFromFile(caminhoCompleto.string())) {
+    std::cerr << "erro: não foi possível carregar a fonte " << caminhoCompleto
+              << '\n';
     exit(EXIT_FAILURE);
   }
 }

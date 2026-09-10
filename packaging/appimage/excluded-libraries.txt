@@ -1,0 +1,40 @@
+# Libraries intentionally supplied by the target Linux system.
+#
+# This is a focused snapshot of the AppImage community exclusion policy for
+# Ymir & Helga's dependency graph. Review changes explicitly when the Ubuntu
+# build baseline or graphics stack changes.
+# Source: https://github.com/AppImageCommunity/pkg2appimage/blob/f2df956789f36204213876c96500c8b05595e43b/excludelist
+
+# Dynamic loader and GNU C Library
+ld-linux*.so.*
+libanl.so.*
+libBrokenLocale.so.*
+libc.so.*
+libcidn.so.*
+libdl.so.*
+libm.so.*
+libmvec.so.*
+libnss_*.so.*
+libpthread.so.*
+libresolv.so.*
+librt.so.*
+libthread_db.so.*
+libutil.so.*
+
+# Compiler/C++ ABI supplied by the Ubuntu 22.04 compatibility baseline
+libgcc_s.so.*
+libstdc++.so.*
+
+# Host GPU/OpenGL stack; bundling these can conflict with installed drivers
+libGL.so.*
+libEGL.so.*
+libGLdispatch.so.*
+libGLX.so.*
+libOpenGL.so.*
+libdrm.so.*
+libglapi.so.*
+libgbm.so.*
+
+# Core X11 ABI libraries intentionally supplied by a graphical Linux session
+libxcb.so.*
+libX11.so.*

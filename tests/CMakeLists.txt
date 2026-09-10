@@ -6,6 +6,7 @@ add_executable(
   tests
   MainTest.cpp
   IDTest.cpp
+  CaminhoRecursosTest.cpp
 )
 
 # Adiciona o diretorio 'include/'

@@ -42,3 +42,9 @@ bin/
 
 # PDF's e imagens
 *.pdf
+
+# ai plans
+*.plan.md
+plans/
+
+.DS_Store

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 
+#include "CaminhoRecursos.h"
 #include "Gerenciadores/GerenciadorGrafico.h"
 
 Gerenciadores::GerenciadorGrafico* Ente::pGG(
@@ -36,15 +37,17 @@ void Ente::atualizaSprite(sf::Texture* pTexture) {
 }
 
 bool Ente::setTextura(const std::string& path) {
-  std::string filePath = ROOT;
-  filePath += path;
-  if (pTexture->loadFromFile(filePath)) {
+  const std::filesystem::path caminhoCompleto =
+      Recursos::resolverCaminhoRecurso(path);
+
+  if (pTexture->loadFromFile(caminhoCompleto.string())) {
     atualizaSprite(pTexture);
     return true;
-  } else {
-    std::cerr << "erro: loadFromFile()\n";
-    exit(EXIT_FAILURE);
   }
+
+  std::cerr << "erro: não foi possível carregar a textura "
+            << caminhoCompleto << '\n';
+  exit(EXIT_FAILURE);
 }
 
 sf::Sprite Ente::getSprite() {
