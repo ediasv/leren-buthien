@@ -14,7 +14,8 @@
   <developer_name>Eduardo Dias</developer_name>
   <launchable type="desktop-id">io.github.ediasv.YmirHelga.desktop</launchable>
   <url type="homepage">https://github.com/ediasv/ymir-helga</url>
-  <url type="vcs-browser">https://github.com/ediasv/ymir-helga</url>
+  <url type="bugtracker">https://github.com/ediasv/ymir-helga/issues</url>
+  <content_rating type="oars-1.1"/>
   <releases>
     <release version="0.1.0" date="2026-09-10">
       <description>
